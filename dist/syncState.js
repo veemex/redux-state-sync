@@ -29,6 +29,9 @@ var defaultConfig = {
   broadcastChannelOption: null,
   prepareState: function prepareState(state) {
     return state;
+  },
+  prepareAction: function prepareAction(stampedAction) {
+    return stampedAction;
   }
 };
 
@@ -133,6 +136,7 @@ var createStateSyncMiddleware = exports.createStateSyncMiddleware = function cre
   var allowed = isActionAllowed(config);
   var channel = new _broadcastChannel2.default(config.channel, config.broadcastChannelOption);
   var prepareState = config.prepareState || defaultConfig.prepareState;
+  var prepareAction = config.prepareAction || defaultConfig.prepareAction;
 
   return function (_ref3) {
     var getState = _ref3.getState,
@@ -157,7 +161,7 @@ var createStateSyncMiddleware = exports.createStateSyncMiddleware = function cre
               return next(action);
             }
             if (allowed(stampedAction) || action.type === GET_INIT_STATE) {
-              channel.postMessage(stampedAction);
+              channel.postMessage(prepareAction(stampedAction));
             }
           } catch (e) {
             console.error("Your browser doesn't support cross tab communication");

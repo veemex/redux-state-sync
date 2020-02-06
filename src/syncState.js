@@ -12,7 +12,8 @@ const defaultConfig = {
   blacklist: [],
   whitelist: [],
   broadcastChannelOption: null,
-  prepareState: state => state
+  prepareState: state => state,
+  prepareAction: stampedAction => stampedAction,
 };
 
 const getIniteState = () => ({ type: GET_INIT_STATE });
@@ -98,6 +99,8 @@ export const createStateSyncMiddleware = (config = defaultConfig) => {
   const allowed = isActionAllowed(config);
   const channel = new BroadcastChannel(config.channel, config.broadcastChannelOption);
   const prepareState = config.prepareState || defaultConfig.prepareState;
+  const prepareAction = config.prepareAction || defaultConfig.prepareAction;
+
 
   return ({ getState, dispatch }) => next => (action) => {
     // create message receiver
@@ -118,7 +121,7 @@ export const createStateSyncMiddleware = (config = defaultConfig) => {
           return next(action);
         }
         if (allowed(stampedAction) || action.type === GET_INIT_STATE) {
-          channel.postMessage(stampedAction);
+          channel.postMessage(prepareAction(stampedAction));
         }
       } catch (e) {
         console.error("Your browser doesn't support cross tab communication");
@@ -141,8 +144,8 @@ export const createReduxStateSync = ({ prepareState }) => appReducer =>
 
 // init state with other tab's state
 export const withReduxStateSync = createReduxStateSync({
-  prepareState: state => state
-})
+  prepareState: state => state,
+});
 
 export const initStateWithPrevTab = ({ dispatch }) => {
   dispatch(getIniteState());
